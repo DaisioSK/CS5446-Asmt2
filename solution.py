@@ -193,7 +193,7 @@ def get_deltas(rewards, values, next_values, next_nonterminal, gamma):
     """
     ### -------------- TASK 2 ------------ ###
     ### ----- YOUR CODES START HERE ------ ###
-    deltas = ?
+    deltas = rewards + gamma * next_nonterminal * next_values - values
     ### ------ YOUR CODES END HERE ------- ###
     return deltas
 
