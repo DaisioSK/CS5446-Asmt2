@@ -2,8 +2,8 @@
 Assignment 2
 
 * Group Member 1:
-    - Name:
-    - Student ID:
+    - Name: Liu Sicheng
+    - Student ID: A0227145J
 
 * Group Member 2:
     - Name:
@@ -57,10 +57,10 @@ class ACAgent(nn.Module):
 
         ### ------------- TASK 1.1 ----------- ###
         ### ----- YOUR CODES START HERE ------ ###
-        actor_input_dim = ?  # Input dimension for the actor
-        actor_output_dim = ?  # Output dimension for the actor (number of actions)
-        critic_input_dim = ?  # Input dimension for the critic
-        critic_output_dim = ?  # Output dimension for the critic (value estimate)
+        actor_input_dim = envs.single_observation_space.shape[0]  # Input dimension for the actor
+        actor_output_dim = envs.single_action_space.n  # Output dimension for the actor (number of actions)
+        critic_input_dim = envs.single_observation_space.shape[0]  # Input dimension for the critic
+        critic_output_dim = 1  # Output dimension for the critic (value estimate)
         ### ------ YOUR CODES END HERE ------- ###
 
         # Define the actor network
@@ -96,7 +96,7 @@ class ACAgent(nn.Module):
         """
         ### ------------- TASK 1.2 ----------- ###
         ### ----- YOUR CODES START HERE ------ ###
-        value = ?  # Forward pass through the critic network
+        value = self.critic(x)  # Forward pass through the critic network
         ### ------ YOUR CODES END HERE ------- ###
         return value
 
@@ -111,8 +111,8 @@ class ACAgent(nn.Module):
         """
         ### ------------- TASK 1.3 ----------- ###
         ### ----- YOUR CODES START HERE ------ ###
-        logits = ?  # Get logits from the actor network
-        probs = ?  # Create a categorical distribution from the logits
+        logits = self.actor(x)  # Get logits from the actor network
+        probs = Categorical(logits=logits)  # Create a categorical distribution from the logits
         ### ------ YOUR CODES END HERE ------- ###
         return probs
 
@@ -127,7 +127,7 @@ class ACAgent(nn.Module):
         """
         ### ------------- TASK 1.4 ----------- ###
         ### ----- YOUR CODES START HERE ------ ###
-        action = ?  # Sample an action based on the probabilities
+        action = probs.sample()  # Sample an action based on the probabilities
         ### ------ YOUR CODES END HERE ------- ###
         return action
 
@@ -143,7 +143,7 @@ class ACAgent(nn.Module):
         """
         ### ------------- TASK 1.5 ----------- ###
         ### ----- YOUR CODES START HERE ------ ###
-        logprob = ?  # Calculate log probability of the sampled action
+        logprob = probs.log_prob(action)  # Calculate log probability of the sampled action
         ### ------ YOUR CODES END HERE ------- ###
         return logprob
 
