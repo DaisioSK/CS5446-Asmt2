@@ -10,8 +10,8 @@ Assignment 2
     - Student ID:
     
 * Group Member 3:
-    - Name:
-    - Student ID:
+    - Name: Nguyen Thien Duc
+    - Student ID: A0287222E
 """
 
 
@@ -57,9 +57,9 @@ class ACAgent(nn.Module):
 
         ### ------------- TASK 1.1 ----------- ###
         ### ----- YOUR CODES START HERE ------ ###
-        actor_input_dim = envs.single_observation_space.shape[0]  # Input dimension for the actor
-        actor_output_dim = envs.single_action_space.n  # Output dimension for the actor (number of actions)
-        critic_input_dim = envs.single_observation_space.shape[0]  # Input dimension for the critic
+        actor_input_dim = 13  # Input dimension for the actor
+        actor_output_dim = 6  # Output dimension for the actor (number of actions)
+        critic_input_dim = 13  # Input dimension for the critic
         critic_output_dim = 1  # Output dimension for the critic (value estimate)
         ### ------ YOUR CODES END HERE ------- ###
 
@@ -219,8 +219,8 @@ def get_ratio(logprob, logprob_old):
     """
     ### ------------ TASK 3.1.1 ---------- ###
     ### ----- YOUR CODES START HERE ------ ###
-    logratio = ?  # Compute the log ratio
-    ratio = ?  # Exponentiate to get the probability ratio
+    logratio = torch.clamp(logprob - logprob_old, -20.0, 20.0)  # Compute the log ratio
+    ratio = torch.exp(logratio)  # Exponentiate to get the probability ratio
     ### ------ YOUR CODES END HERE ------- ###
     return ratio
 
@@ -246,9 +246,9 @@ def get_policy_objective(advantages, ratio, clip_coeff=CLIP_COEF):
     """
     ### ------------ TASK 3.1.2 ---------- ###
     ### ----- YOUR CODES START HERE ------ ###
-    policy_objective1 = ?  # Calculate the first policy loss term
-    policy_objective2 = ?  # Calculate the clipped policy loss term
-    policy_objective = ?  # Take the minimum and average over the batch
+    policy_objective1 = ratio * advantages  # Calculate the first policy loss term
+    policy_objective2 = torch.clamp(ratio, 1 - clip_coeff, 1 + clip_coeff) * advantages  # Calculate the clipped policy loss term
+    policy_objective = torch.mean(torch.min(policy_objective1, policy_objective2))  # Take the minimum and average over the batch
     ### ------ YOUR CODES END HERE ------- ###
     return policy_objective
 
@@ -272,11 +272,19 @@ def get_value_loss(values, values_old, returns):
     """
     ### ------------- TASK 3.2 ----------- ###
     ### ----- YOUR CODES START HERE ------ ###
-    value_loss_unclipped = ?  # Calculate unclipped value loss
+    v = values.squeeze(-1)
+    v_old = values_old.squeeze(-1).detach()
+    ret = returns.squeeze(-1)
 
-    value_loss_clipped = ?  # Calculate clipped value loss
+    # Unclipped squared error per sample
+    loss_unclipped = (v - ret) ** 2
 
-    value_loss = ?  # Average over the batch
+    # Clipped value prediction: v_old + clip(v - v_old, -eps, +eps)
+    v_clipped = v_old + (v - v_old).clamp(-CLIP_COEF, +CLIP_COEF)
+    loss_clipped = (v_clipped - ret) ** 2
+
+    # PPO value loss = 0.5 * mean( max(loss_unclipped, loss_clipped) )
+    value_loss = 0.5 * torch.mean(torch.max(loss_unclipped, loss_clipped))
     ### ------ YOUR CODES END HERE ------- ###
     return value_loss  # Return the final combined value loss
 
@@ -303,6 +311,6 @@ def get_total_loss(policy_objective, value_loss, entropy_objective, value_loss_c
     """
     ### ------------- TASK 3.3 ----------- ###
     ### ----- YOUR CODES START HERE ------ ###
-    total_loss = ?  # Combine losses
+    total_loss = -policy_objective + value_loss_coeff * value_loss - entropy_coeff * entropy_objective  # Combine losses
     ### ------ YOUR CODES END HERE ------- ###
     return total_loss
