@@ -6,8 +6,8 @@ Assignment 2
     - Student ID: A0227145J
 
 * Group Member 2:
-    - Name:
-    - Student ID:
+    - Name: Yao Kexiang
+    - Student ID: A0245216L
     
 * Group Member 3:
     - Name: Nguyen Thien Duc
